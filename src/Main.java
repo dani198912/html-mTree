@@ -5,9 +5,9 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         // Test string map...
-        String[] html = {"<body>", "<tagn>", "</tagn>", "<div>", "</div>", "<div>", "<tag1>","<br>", "<p>", "</p>", "</tag1>", "<p>", "</p>", "<p>", "</p>", "<p>", "</p>", "</div>", "<div>", "<p>", "</p>", "<p>", "</p>", "</div>", "</body>"};
-        ArrayList<Node> nodeList = new ArrayList<Node>();
-        ArrayList<Node> visiting = new ArrayList<Node>();
+        String[] html = {"<body>", "<tagn class = \"ciuciu\" data-struct = \"shitty data\">", "</tagn>", "<div>", "</div>", "<div>", "<tag1>","<br>", "<p>", "</p>", "</tag1>", "<p>", "</p>", "<p>", "</p>", "<p>", "</p>", "</div>", "<div>", "<p>", "</p>", "<p>", "</p>", "</div>", "</body>"};
+        ArrayList<Node> nodeList = new ArrayList<Node>();//LIST CREATED FROM THE STRING LIST
+        ArrayList<Node> visiting = new ArrayList<Node>();//VISITING IS ONLY A TEMP LIST
         for (String s : html) {
             nodeList.add(new Node(s));
         }
@@ -41,7 +41,7 @@ public class Main {
         Node root = nodeList.get(0);
 
         for (Node x: root.inOrderView){
-            System.out.println(x.IsEndTag());
+            System.out.println(x.getAttribute("data-struct"));
         }
         System.out.println(root.inOrderView.getClass());
     }
@@ -74,7 +74,7 @@ class Node{
     private Node parent;
     private ArrayList<Node> child = new ArrayList<Node>();
     private boolean isEmptyTag;// empty tags are self closing tags
-
+    private HashMap<String, String> attributesMap = new HashMap<String, String>();
     Node()
     {
         tagName = "";
@@ -84,10 +84,10 @@ class Node{
 
     Node(String varData)
     {
-        this.tagName = varData;
-        isEmptyTag = checkEmptyTag();
+        this.attributesMap = processAttributes(varData);
+        this.tagName = attributesMap.get("tagName");
+        this.isEmptyTag = checkEmptyTag();
     }
-
     public void setParent(Node parentNode)
     {
         this.parent = parentNode;
@@ -220,6 +220,48 @@ class Node{
         return false;
     }
 
+    //Cap2. Populate the attributes map to be able to acces it
+    public HashMap<String, String> processAttributes(String s){
+        HashMap<String, String> attrMap = new HashMap<String, String>();
+
+        //CLEARING AND GETTING THE TAG NAME AND END TAG NAME
+        if(!s.contains("/")) {
+            if(s.contains(" "))
+            {
+                String tagName = s.substring(s.indexOf("<"), s.indexOf(" ")) + ">";
+                s = s.substring(s.indexOf(" "));
+                s = s.replace(">", "");
+                System.out.println("Resulting string is:" + s);
+                attrMap.put("tagName", tagName);
+            } else {
+                attrMap.put("tagName", s.replaceAll(" ", ""));
+            }
+
+        } else {
+            attrMap.put("tagName", s.replaceAll(" ", ""));
+        }
+        // GETTING THE ATTRIBUTES DONE
+        while (!s.contains("/")&&(s.contains("=") || s.contains("\""))) {
+            String attr = s.substring(0, s.indexOf("=")).trim();
+
+            s = s.substring(s.indexOf("=") + 1);
+            s = s.substring(s.indexOf("\"")+1);
+            String attrData = s.substring(0, s.indexOf("\"")).trim();
+
+            s = s.substring(s.indexOf("\"")+1);
+            attrMap.put(attr, attrData);
+        }
+        return attrMap;
+    }
+
+    public String getAttribute(String attrName){
+        if(this.attributesMap.containsKey(attrName)){
+            return attributesMap.get(attrName);
+        } else {
+            return null;
+        }
+    }
+    //Cap3.THE ITERATOR InOrder Acces of elements ... for later sorting in other trees.
     // TODO: 16-Oct-19 Make the Node class iterable with an enhanced for loop.
     static class InOrderIterator implements Iterator<Node> {
         final Queue<Node> queue = new LinkedList<Node>();
@@ -252,6 +294,9 @@ class Node{
             return new InOrderIterator(Node.this);
         }
     };
+    //Cap3. End
+
+
 }
 
 
